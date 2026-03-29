@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Search Result</title>
-<link rel="stylesheet" href="style.css">
+    <title>Result</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -19,54 +19,89 @@
 </div>
 
 <script>
-function search() {
+async function search() {
 
     const roll = document.getElementById("searchRoll").value.trim();
-    const data = JSON.parse(localStorage.getItem("students")) || [];
-
-    const student = data.find(s => s.roll.toString().trim() === roll);
-
     const output = document.getElementById("output");
 
-    if (!student) {
-        output.innerHTML = "<p>❌ Student not found</p>";
+    if (!roll) {
+        output.innerHTML = "Enter roll number";
         return;
     }
 
-    const subjects = ["Web Tech", "IP", "Unix", "Robotics", "SE"];
+    try {
+        // get all students (needed for ranking)
+        const res = await fetch("http://localhost:5051/students");
+        const data = await res.json();
 
-    let rows = "";
+        const student = data.find(s => s.roll == roll);
 
-    subjects.forEach((sub, i) => {
-        rows += `
-        <tr>
-            <td>${sub}</td>
-            <td>${student.marks[i]}</td>
-            <td>${student.subjectGrades[i]}</td>
-        </tr>
-        `;
-    });
+        if (!student) {
+            output.innerHTML = "Student not found";
+            return;
+        }
 
-    output.innerHTML = `
-    <div class="student">
-        <h3>${student.name}</h3>
-        Roll: ${student.roll}<br><br>
+        // SUBJECT LIST
+        const subjects = ["Web Tech", "IP", "Unix", "Robotics", "SE"];
 
-        <table border="1" width="100%" style="border-collapse: collapse;">
+        // CALCULATE TOTAL FOR RANK
+        data.forEach(s => {
+            s.total = s.marks.reduce((a,b)=>a+b,0);
+        });
+
+        // sort for ranking
+        data.sort((a,b)=>b.total - a.total);
+
+        let rank = 1;
+        data.forEach(s => {
+            if (s.fail) {
+                s.rank = "F";
+            } else {
+                s.rank = rank++;
+            }
+        });
+
+        // find updated student with rank
+        const finalStudent = data.find(s => s.roll == roll);
+
+        // TABLE
+        let rows = "";
+
+        subjects.forEach((sub, i) => {
+            rows += `
             <tr>
-                <th>Subject</th>
-                <th>Marks</th>
-                <th>Grade</th>
+                <td>${sub}</td>
+                <td>${finalStudent.marks[i]}</td>
+                <td>${finalStudent.subjectGrades[i]}</td>
             </tr>
-            ${rows}
-        </table>
+            `;
+        });
 
-        <br>
-        <b>CGPA:</b> ${student.cgpa}<br>
-        <b>Status:</b> ${student.fail ? "FAIL" : "PASS"}<br>
-        <b>Rank:</b> ${student.rank}
-    </div>
-    `;
+        output.innerHTML = `
+        <div class="student">
+            <h3>${finalStudent.name}</h3>
+
+            <b>Roll:</b> ${finalStudent.roll}<br><br>
+
+            <table border="1" width="100%" style="border-collapse: collapse;">
+                <tr>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Grade</th>
+                </tr>
+                ${rows}
+            </table>
+
+            <br>
+            <b>CGPA:</b> ${finalStudent.cgpa}<br>
+            <b>Status:</b> ${finalStudent.fail ? "FAIL" : "PASS"}<br>
+            <b>Rank:</b> ${finalStudent.fail ? "-" : finalStudent.rank}
+        </div>
+        `;
+
+    } catch (err) {
+        output.innerHTML = "Server error";
+    }
 }
 </script>
 

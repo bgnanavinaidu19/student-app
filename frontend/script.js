@@ -21,7 +21,7 @@ function startEntry() {
         `;
     }
 
-    formArea.innerHTML += `<button onclick="calculate()">Calculate Results</button>`;
+    formArea.innerHTML += `<button onclick="calculate()">Calculate & Save</button>`;
 }
 
 // grade
@@ -46,12 +46,9 @@ function gradeToPoint(g) {
     return 0;
 }
 
-function calculate() {
-    students = [];
-    const count = document.getElementById("count").value;
+async function calculate() {
 
-    let subjectTotals = [0,0,0,0,0];
-    let subjectTop = [0,0,0,0,0];
+    const count = document.getElementById("count").value;
 
     for (let i = 0; i < count; i++) {
 
@@ -63,47 +60,47 @@ function calculate() {
             +document.getElementById(`se${i}`).value
         ];
 
-        // subject stats
-        marks.forEach((m, idx) => {
-            subjectTotals[idx] += m;
-            if (m > subjectTop[idx]) subjectTop[idx] = m;
+        let subjectGrades = marks.map(m => {
+            if (m >= 90) return "S";
+            if (m >= 80) return "A";
+            if (m >= 70) return "B";
+            if (m >= 60) return "C";
+            if (m >= 50) return "D";
+            if (m >= 40) return "E";
+            return "F";
         });
 
-        let total = marks.reduce((a,b)=>a+b,0);
-        let avg = total / 5;
+        let cgpa = (
+            subjectGrades.reduce((sum, g) => {
+                if (g === "S") return sum + 10*3;
+                if (g === "A") return sum + 9*3;
+                if (g === "B") return sum + 8*3;
+                if (g === "C") return sum + 7*3;
+                if (g === "D") return sum + 6*3;
+                if (g === "E") return sum + 5*3;
+                return sum;
+            }, 0) / 15
+        ).toFixed(2);
 
-        let subjectGrades = marks.map(m => getSubjectGrade(m));
-
-        // CGPA
-        let totalPoints = subjectGrades.reduce((sum, g) => sum + gradeToPoint(g)*3, 0);
-        let cgpa = totalPoints / 15;
-
-        students.push({
-            name: document.getElementById(`name${i}`).value,
-            roll: document.getElementById(`roll${i}`).value,
+        let student = {
+            name: document.getElementById(`name${i}`).value.trim(),
+            roll: document.getElementById(`roll${i}`).value.trim(), 
             marks,
-            total,
-            avg: avg.toFixed(2),
             subjectGrades,
-            cgpa: cgpa.toFixed(2),
+            cgpa,
             fail: marks.some(m => m < 40)
+        };
+
+        console.log("Sending:", student); // DEBUG
+
+        await fetch("http://localhost:5051/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(student)
         });
     }
 
-    // ranking
-    students.sort((a,b)=>b.total-a.total);
-
-	let rank = 1;
-	students.forEach((s,i)=>{
-    	if (s.fail) {
-       		 s.rank = "F";   // failed students no rank
-    	} else {
-        	s.rank = rank++;
-   	 }
-	});
-
-    // save data
-    localStorage.setItem("students", JSON.stringify(students));
-
-    alert("Results calculated! Go to result page ");
+    alert("Saved successfully!");
 }

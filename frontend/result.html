@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Search Result</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🔍 Search Student Result</h2>
+
+<input id="searchRoll" placeholder="Enter Roll Number">
+<button onclick="search()">Search</button>
+
+<div id="output"></div>
+
+</div>
+
+<script>
+function search() {
+
+    const roll = document.getElementById("searchRoll").value.trim();
+    const data = JSON.parse(localStorage.getItem("students")) || [];
+
+    const student = data.find(s => s.roll.toString().trim() === roll);
+
+    const output = document.getElementById("output");
+
+    if (!student) {
+        output.innerHTML = "<p>❌ Student not found</p>";
+        return;
+    }
+
+    const subjects = ["Web Tech", "IP", "Unix", "Robotics", "SE"];
+
+    let rows = "";
+
+    subjects.forEach((sub, i) => {
+        rows += `
+        <tr>
+            <td>${sub}</td>
+            <td>${student.marks[i]}</td>
+            <td>${student.subjectGrades[i]}</td>
+        </tr>
+        `;
+    });
+
+    output.innerHTML = `
+    <div class="student">
+        <h3>${student.name}</h3>
+        Roll: ${student.roll}<br><br>
+
+        <table border="1" width="100%" style="border-collapse: collapse;">
+            <tr>
+                <th>Subject</th>
+                <th>Marks</th>
+                <th>Grade</th>
+            </tr>
+            ${rows}
+        </table>
+
+        <br>
+        <b>CGPA:</b> ${student.cgpa}<br>
+        <b>Status:</b> ${student.fail ? "FAIL" : "PASS"}<br>
+        <b>Rank:</b> ${student.rank}
+    </div>
+    `;
+}
+</script>
+
+</body>
+</html>

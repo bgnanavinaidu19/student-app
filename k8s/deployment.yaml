@@ -3,18 +3,21 @@ kind: Deployment
 metadata:
   name: student-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: student
+      app: student-app
   template:
     metadata:
       labels:
-        app: student
+        app: student-app
     spec:
       containers:
-        - name: backend
-          image: student-app
+        - name: student-app
+          image: student-app-backend:latest
           imagePullPolicy: Never
           ports:
-            - containerPort: 5000
+            - containerPort: 5050
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongo:27017/studentdb

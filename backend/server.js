@@ -47,11 +47,10 @@ app.get("/students/:roll", async (req, res) => {
     res.json(student);
 });
 
-
-//FRONTEND 
+// FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
 
-//SERVER
-app.listen(5050, () => {
+// SERVER
+app.listen(5050, "0.0.0.0", () => {
     console.log("Server running on 5050");
 });

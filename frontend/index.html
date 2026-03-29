@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Student App</h2>
+
+<input id="name" placeholder="Name"><br>
+<input id="marks" placeholder="Marks comma separated"><br>
+<button onclick="add()">Add</button>
+
+<ul id="list"></ul>
+
+<script>
+async function add() {
+  const name = document.getElementById("name").value;
+  const marks = document.getElementById("marks").value.split(",").map(Number);
+
+  await fetch("http://localhost:5000/add", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name, marks })
+  });
+
+  load();
+}
+
+async function load() {
+  const res = await fetch("http://localhost:5000/students");
+  const data = await res.json();
+  document.getElementById("list").innerHTML =
+    data.map(s => `<li>${s.name} - ${s.grade}</li>`).join("");
+}
+
+load();
+</script>
+</body>
+</html>

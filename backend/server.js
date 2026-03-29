@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect("mongodb://mongo:27017/studentDB");
+mongoose.connect("mongodb://localhost:27017/studentDB");
 
 const Student = mongoose.model("Student", {
   name: String,

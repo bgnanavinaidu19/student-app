@@ -1,36 +1,143 @@
 <!DOCTYPE html>
 <html>
-<body>
-<h2>Student App</h2>
+<head>
+<title>Student Dashboard</title>
 
-<input id="name" placeholder="Name"><br>
-<input id="marks" placeholder="Marks comma separated"><br>
-<button onclick="add()">Add</button>
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    margin: 0;
+    padding: 20px;
+}
 
-<ul id="list"></ul>
+.container {
+    width: 500px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+h2, h3 {
+    text-align: center;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.delete {
+    background: red;
+    margin-top: 5px;
+}
+
+.student {
+    background: #f4f4f4;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body onload="loadStudents()">
+
+<div class="container">
+
+<div class="card">
+<h2>🎓 Student Dashboard</h2>
+
+<input id="name" placeholder="Enter name">
+<input id="marks" placeholder="90,80,70">
+
+<button onclick="addStudent()">Add Student</button>
+</div>
+
+<div class="card">
+<h3>Student List</h3>
+<div id="list"></div>
+</div>
+
+</div>
 
 <script>
-async function add() {
-  const name = document.getElementById("name").value;
-  const marks = document.getElementById("marks").value.split(",").map(Number);
 
-  await fetch("http://localhost:5000/add", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ name, marks })
-  });
+async function addStudent() {
+    const name = document.getElementById("name").value.trim();
+    const marksInput = document.getElementById("marks").value.trim();
 
-  load();
+    if (!name || !marksInput) {
+        alert("Enter valid data");
+        return;
+    }
+
+    const marks = marksInput.split(",").map(Number);
+
+    await fetch("http://localhost:5050/add", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ name, marks })
+    });
+
+    document.getElementById("name").value = "";
+    document.getElementById("marks").value = "";
+
+    loadStudents();
 }
 
-async function load() {
-  const res = await fetch("http://localhost:5000/students");
-  const data = await res.json();
-  document.getElementById("list").innerHTML =
-    data.map(s => `<li>${s.name} - ${s.grade}</li>`).join("");
+async function deleteStudent(id) {
+    await fetch(`http://localhost:5050/delete/${id}`, {
+        method: "DELETE"
+    });
+
+    alert("Deleted successfully");
+
+    loadStudents();
 }
 
-load();
+async function loadStudents() {
+    const res = await fetch("http://localhost:5050/students");
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "student";
+
+        div.innerHTML = `
+            <b>${s.name}</b><br>
+            Marks: ${s.marks.join(", ")}<br>
+            Avg: ${s.average.toFixed(2)}<br>
+            Grade: ${s.grade}<br>
+            <button class="delete" onclick="deleteStudent('${s._id}')">Delete</button>
+        `;
+
+        list.appendChild(div);
+    });
+}
+
 </script>
+
 </body>
 </html>

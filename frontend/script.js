@@ -119,7 +119,7 @@ async function calculate() {
         formArea.innerHTML = "";
         statusMessage.innerHTML = `
             <div class="success-banner">
-                ${count} student(s) saved successfully! You can now view results.
+                Total student(s) saved successfully! You can now view results.
             </div>
             <div style="margin-top: 20px; display: flex; justify-content: center; gap: 15px;">
                 <button onclick="window.location.reload()">Add More Students</button>

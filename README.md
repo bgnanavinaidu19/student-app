@@ -13,15 +13,6 @@
 - MongoDB
 - Docker & Kubernetes
 
-## How to Run
-
-1. Clone the repository
-2. Install dependencies
-   npm install
-3. Start server
-   node server.js
-4. Open frontend/index.html
-
-## Output
-- Displays marks, grades, CGPA
-- Shows rank and topper
+## Operation
+1. Run `kubectl apply -f k8s/`
+2. Run `minikube service study-planner-service`

@@ -1,5 +1,8 @@
 # Student Performance System
 
+## Project Demo
+https://github.com/bgnanavinaidu19/student-app/blob/main/presentation.mp4?raw=true
+
 ## Features
 - Add student details
 - Subject-wise grading

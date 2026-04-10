@@ -1,109 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Result</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Results</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+    <div class="container">
+        <h1>Student Results</h1>
+        <p class="subtext">Search by roll number to view grades, CGPA and class rank</p>
 
-<div class="container">
+        <div class="card">
+            <div class="input-group">
+                <span class="input-label">Roll Number</span>
+                <input type="text" id="roll" placeholder="e.g. 11" />
+                <button onclick="searchResult()">Search</button>
+            </div>
+            <div id="message" style="margin-top: 15px; font-weight: 500;"></div>
+        </div>
 
-<h2>🔍 Search Student Result</h2>
-
-<input id="searchRoll" placeholder="Enter Roll Number">
-<button onclick="search()">Search</button>
-
-<div id="output"></div>
-
-</div>
-
-<script>
-async function search() {
-
-    const roll = document.getElementById("searchRoll").value.trim();
-    const output = document.getElementById("output");
-
-    if (!roll) {
-        output.innerHTML = "Enter roll number";
-        return;
-    }
-
-    try {
-        // get all students (needed for ranking)
-        const res = await fetch("http://localhost:5051/students");
-        const data = await res.json();
-
-        const student = data.find(s => s.roll == roll);
-
-        if (!student) {
-            output.innerHTML = "Student not found";
-            return;
-        }
-
-        // SUBJECT LIST
-        const subjects = ["Web Tech", "IP", "Unix", "Robotics", "SE"];
-
-        // CALCULATE TOTAL FOR RANK
-        data.forEach(s => {
-            s.total = s.marks.reduce((a,b)=>a+b,0);
-        });
-
-        // sort for ranking
-        data.sort((a,b)=>b.total - a.total);
-
-        let rank = 1;
-        data.forEach(s => {
-            if (s.fail) {
-                s.rank = "F";
-            } else {
-                s.rank = rank++;
-            }
-        });
-
-        // find updated student with rank
-        const finalStudent = data.find(s => s.roll == roll);
-
-        // TABLE
-        let rows = "";
-
-        subjects.forEach((sub, i) => {
-            rows += `
-            <tr>
-                <td>${sub}</td>
-                <td>${finalStudent.marks[i]}</td>
-                <td>${finalStudent.subjectGrades[i]}</td>
-            </tr>
-            `;
-        });
-
-        output.innerHTML = `
-        <div class="student">
-            <h3>${finalStudent.name}</h3>
-
-            <b>Roll:</b> ${finalStudent.roll}<br><br>
-
-            <table border="1" width="100%" style="border-collapse: collapse;">
-                <tr>
-                    <th>Subject</th>
-                    <th>Marks</th>
-                    <th>Grade</th>
-                </tr>
-                ${rows}
+        <div id="resultBox" class="card" style="display: none; text-align: left;">
+            <h2 id="name" style="color: #2563eb; margin-bottom: 5px;"></h2>
+            <p id="subHeader" style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;"></p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Marks</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTableBody">
+                    <!-- Rows will be added here -->
+                </tbody>
             </table>
 
-            <br>
-            <b>CGPA:</b> ${finalStudent.cgpa}<br>
-            <b>Status:</b> ${finalStudent.fail ? "FAIL" : "PASS"}<br>
-            <b>Rank:</b> ${finalStudent.fail ? "-" : finalStudent.rank}
+            <div class="summary-container">
+                <div class="summary-box">
+                    <div class="summary-label">CGPA</div>
+                    <div class="summary-value" id="cgpaVal">0.00</div>
+                </div>
+                <div class="summary-box" id="statusBox">
+                    <div class="summary-label">Status</div>
+                    <div class="summary-value" id="statusVal">PASS</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">Class Rank</div>
+                    <div class="summary-value" id="rankVal">#0</div>
+                </div>
+            </div>
         </div>
-        `;
 
-    } catch (err) {
-        output.innerHTML = "Server error";
-    }
-}
-</script>
+        <div style="margin-top: 30px;">
+            <button class="btn-secondary" onclick="window.location.href='index.html'">Back to Entry Page</button>
+        </div>
+    </div>
 
+    <script>
+        async function searchResult() {
+            const roll = document.getElementById("roll").value.trim();
+            const message = document.getElementById("message");
+            const resultBox = document.getElementById("resultBox");
+
+            message.innerText = "";
+            resultBox.style.display = "none";
+
+            if (roll === "") {
+                message.innerText = "Please enter roll number";
+                message.style.color = "#dc2626";
+                return;
+            }
+
+            try {
+                // 1. Fetch all students to calculate rank
+                const allRes = await fetch("/students");
+                const allStudents = await allRes.json();
+                
+                // 2. Find specific student
+                const student = allStudents.find(s => s.roll === roll);
+
+                if (!student) {
+                    message.innerText = "Student not found";
+                    message.style.color = "#dc2626";
+                    return;
+                }
+
+                // 3. Calculate Rank
+                allStudents.sort((a, b) => parseFloat(b.cgpa) - parseFloat(a.cgpa));
+                const rank = allStudents.findIndex(s => s.roll === roll) + 1;
+
+                // 4. Update UI
+                document.getElementById("name").innerText = student.name.toLowerCase();
+                document.getElementById("subHeader").innerText = `Roll No: ${student.roll}  |  Total: ${student.marks.reduce((a,b)=>a+b, 0)} / 500`;
+                
+                const tableBody = document.getElementById("resultTableBody");
+                tableBody.innerHTML = "";
+                const subjects = ["Web Technology", "Internet Prog.", "Unix", "Robotics", "Software Engg."];
+                
+                student.marks.forEach((mark, i) => {
+                    const grade = student.subjectGrades[i];
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${subjects[i]}</td>
+                            <td>${mark}</td>
+                            <td class="grade-${grade}">${grade}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById("cgpaVal").innerText = student.cgpa;
+                
+                const statusBox = document.getElementById("statusBox");
+                const statusVal = document.getElementById("statusVal");
+                if (student.fail) {
+                    statusVal.innerText = "FAIL";
+                    statusBox.className = "summary-box status-fail";
+                } else {
+                    statusVal.innerText = "PASS";
+                    statusBox.className = "summary-box status-pass";
+                }
+
+                document.getElementById("rankVal").innerText = `#${rank}`;
+
+                resultBox.style.display = "block";
+            } catch (error) {
+                console.log(error);
+                message.innerText = "Cannot connect to server";
+                message.style.color = "#dc2626";
+            }
+        }
+    </script>
 </body>
 </html>

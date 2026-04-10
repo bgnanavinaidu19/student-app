@@ -3,25 +3,59 @@ let students = [];
 function startEntry() {
     const count = document.getElementById("count").value;
     const formArea = document.getElementById("formArea");
+    const statusMessage = document.getElementById("statusMessage");
+
+    if (!count || count < 1) {
+        alert("Please enter a valid number of students.");
+        return;
+    }
 
     formArea.innerHTML = "";
+    statusMessage.innerHTML = "";
 
     for (let i = 0; i < count; i++) {
         formArea.innerHTML += `
-        <div class="card">
-            <h3>Student ${i + 1}</h3>
-            <input placeholder="Name" id="name${i}">
-            <input placeholder="Roll No" id="roll${i}">
-            <input placeholder="Web Technology" id="wt${i}">
-            <input placeholder="IP" id="ip${i}">
-            <input placeholder="Unix" id="unix${i}">
-            <input placeholder="Robotics" id="robot${i}">
-            <input placeholder="SE" id="se${i}">
+        <div class="card" style="text-align: left;">
+            <h3 style="color: #2563eb; margin-bottom: 20px;">Student ${i + 1}</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label class="input-label">Name</label>
+                    <input placeholder="Enter Name" id="name${i}">
+                </div>
+                <div>
+                    <label class="input-label">Roll No</label>
+                    <input placeholder="Enter Roll No" id="roll${i}">
+                </div>
+                <div>
+                    <label class="input-label">Web Technology</label>
+                    <input type="number" id="wt${i}" placeholder="0-100">
+                </div>
+                <div>
+                    <label class="input-label">Internet Prog.</label>
+                    <input type="number" id="ip${i}" placeholder="0-100">
+                </div>
+                <div>
+                    <label class="input-label">Unix</label>
+                    <input type="number" id="unix${i}" placeholder="0-100">
+                </div>
+                <div>
+                    <label class="input-label">Robotics</label>
+                    <input type="number" id="robot${i}" placeholder="0-100">
+                </div>
+                <div>
+                    <label class="input-label">Software Engg.</label>
+                    <input type="number" id="se${i}" placeholder="0-100">
+                </div>
+            </div>
         </div>
         `;
     }
 
-    formArea.innerHTML += `<button onclick="calculate()">Calculate & Save</button>`;
+    formArea.innerHTML += `
+        <div style="margin-top: 20px; text-align: center;">
+            <button onclick="calculate()" style="width: auto; min-width: 200px;">Calculate & Save All</button>
+        </div>
+    `;
 }
 
 // grade
@@ -35,72 +69,66 @@ function getSubjectGrade(mark) {
     return "F";
 }
 
-// grade → points
-function gradeToPoint(g) {
-    if (g === "S") return 10;
-    if (g === "A") return 9;
-    if (g === "B") return 8;
-    if (g === "C") return 7;
-    if (g === "D") return 6;
-    if (g === "E") return 5;
-    return 0;
-}
-
 async function calculate() {
-
     const count = document.getElementById("count").value;
+    const statusMessage = document.getElementById("statusMessage");
+    const formArea = document.getElementById("formArea");
 
-    for (let i = 0; i < count; i++) {
+    try {
+        for (let i = 0; i < count; i++) {
+            let marks = [
+                +document.getElementById(`wt${i}`).value || 0,
+                +document.getElementById(`ip${i}`).value || 0,
+                +document.getElementById(`unix${i}`).value || 0,
+                +document.getElementById(`robot${i}`).value || 0,
+                +document.getElementById(`se${i}`).value || 0
+            ];
 
-        let marks = [
-            +document.getElementById(`wt${i}`).value,
-            +document.getElementById(`ip${i}`).value,
-            +document.getElementById(`unix${i}`).value,
-            +document.getElementById(`robot${i}`).value,
-            +document.getElementById(`se${i}`).value
-        ];
+            let subjectGrades = marks.map(getSubjectGrade);
 
-        let subjectGrades = marks.map(m => {
-            if (m >= 90) return "S";
-            if (m >= 80) return "A";
-            if (m >= 70) return "B";
-            if (m >= 60) return "C";
-            if (m >= 50) return "D";
-            if (m >= 40) return "E";
-            return "F";
-        });
+            // Simple CGPA calculation based on grades (S=10, A=9, etc.)
+            let points = subjectGrades.map(g => {
+                if (g === "S") return 10;
+                if (g === "A") return 9;
+                if (g === "B") return 8;
+                if (g === "C") return 7;
+                if (g === "D") return 6;
+                if (g === "E") return 5;
+                return 0;
+            });
+            
+            let cgpa = (points.reduce((a, b) => a + b, 0) / 5).toFixed(2);
 
-        let cgpa = (
-            subjectGrades.reduce((sum, g) => {
-                if (g === "S") return sum + 10*3;
-                if (g === "A") return sum + 9*3;
-                if (g === "B") return sum + 8*3;
-                if (g === "C") return sum + 7*3;
-                if (g === "D") return sum + 6*3;
-                if (g === "E") return sum + 5*3;
-                return sum;
-            }, 0) / 15
-        ).toFixed(2);
+            let student = {
+                name: document.getElementById(`name${i}`).value.trim(),
+                roll: document.getElementById(`roll${i}`).value.trim(), 
+                marks,
+                subjectGrades,
+                cgpa,
+                fail: marks.some(m => m < 40)
+            };
 
-        let student = {
-            name: document.getElementById(`name${i}`).value.trim(),
-            roll: document.getElementById(`roll${i}`).value.trim(), 
-            marks,
-            subjectGrades,
-            cgpa,
-            fail: marks.some(m => m < 40)
-        };
+            await fetch("/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(student)
+            });
+        }
 
-        console.log("Sending:", student); // DEBUG
+        // Show Success UI
+        formArea.innerHTML = "";
+        statusMessage.innerHTML = `
+            <div class="success-banner">
+                ${count} student(s) saved successfully! You can now view results.
+            </div>
+            <div style="margin-top: 20px; display: flex; justify-content: center; gap: 15px;">
+                <button onclick="window.location.reload()">Add More Students</button>
+                <button class="btn-secondary" onclick="window.location.href='result.html'">View Results</button>
+            </div>
+        `;
 
-        await fetch("http://localhost:5051/add", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(student)
-        });
+    } catch (err) {
+        console.error(err);
+        alert("Error saving data. Please try again.");
     }
-
-    alert("Saved successfully!");
 }

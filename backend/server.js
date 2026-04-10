@@ -8,49 +8,64 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// MongoDB
-mongoose.connect("mongodb://mongo:27017/studentdb")
-.then(() => console.log("MongoDB Connected"))
-.catch(err => console.log(err));
+mongoose
+  .connect(process.env.MONGO_URL || "mongodb://mongo:27017/studentdb")
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log("MongoDB Error:", err));
 
-// Schema
 const studentSchema = new mongoose.Schema({
-    name: String,
-    roll: String,
-    marks: [Number],
-    subjectGrades: [String],
-    cgpa: String,
-    fail: Boolean
+  name: String,
+  roll: String,
+  marks: [Number],
+  subjectGrades: [String],
+  cgpa: String,
+  fail: Boolean
 });
 
 const Student = mongoose.model("Student", studentSchema);
 
-// ADD
 app.post("/add", async (req, res) => {
+  try {
     const student = new Student(req.body);
     await student.save();
-    res.send("Saved");
+    res.status(201).send("Saved successfully");
+  } catch (err) {
+    console.log("Add Error:", err);
+    res.status(500).send("Server error");
+  }
 });
 
-// GET ALL
 app.get("/students", async (req, res) => {
+  try {
     const data = await Student.find();
     res.json(data);
+  } catch (err) {
+    console.log("Get All Error:", err);
+    res.status(500).send("Server error");
+  }
 });
 
-// GET BY ROLL
 app.get("/students/:roll", async (req, res) => {
+  try {
     const student = await Student.findOne({ roll: req.params.roll });
 
-    if (!student) return res.status(404).send("Not found");
+    if (!student) {
+      return res.status(404).send("Student not found");
+    }
 
     res.json(student);
+  } catch (err) {
+    console.log("Get By Roll Error:", err);
+    res.status(500).send("Server error");
+  }
 });
 
-// FRONTEND
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// SERVER
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
+});
+
 app.listen(5050, "0.0.0.0", () => {
-    console.log("Server running on 5050");
+  console.log("Server running on 5050");
 });

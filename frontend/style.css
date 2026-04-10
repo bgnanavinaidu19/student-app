@@ -1,52 +1,126 @@
 body {
-    font-family: Arial;
-    background: linear-gradient(to right, #1e3c72, #2a5298);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: radial-gradient(circle at center, #1e3c72 0%, #102a51 100%);
     color: white;
-    text-align: center;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
 }
 
 .container {
-    width: 500px;
-    margin: auto;
-    margin-top: 30px;
+    width: 90%;
+    max-width: 900px;
+    margin-top: 50px;
+    text-align: center;
 }
+
+h1 { font-size: 2.2rem; margin-bottom: 5px; }
+.subtext { color: #cbd5e1; margin-bottom: 30px; font-size: 0.9rem; }
 
 .card {
     background: white;
-    color: black;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    color: #1e293b;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
+.input-group {
+    display: flex;
+    gap: 10px;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    justify-content: center;
+    align-items: center;
+}
+
+.input-label { font-weight: 600; color: #475569; font-size: 0.85rem; }
+
 input {
-    width: 90%;
-    padding: 8px;
-    margin: 5px;
+    padding: 10px 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    flex: 1;
 }
 
 button {
-    padding: 10px;
+    padding: 12px 25px;
     background: #2563eb;
     color: white;
     border: none;
     border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
-.student {
-    background: #f4f4f4;
-    color: black;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 10px;
-}
+button:hover { background: #1d4ed8; }
+
+.btn-secondary { background: #475569; margin: 5px; }
+.btn-secondary:hover { background: #334155; }
+
+/* Table Styling */
 table {
-    background: white;
-    color: black;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 
 th {
     background: #2563eb;
     color: white;
+    padding: 12px;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-weight: 500;
+}
+
+.grade-S { color: #9333ea; font-weight: 800; }
+.grade-A { color: #2563eb; font-weight: 800; }
+.grade-B { color: #7c3aed; font-weight: 800; }
+.grade-C { color: #0891b2; font-weight: 800; }
+.grade-D { color: #ea580c; font-weight: 800; }
+.grade-E { color: #dc2626; font-weight: 800; }
+.grade-F { color: #7f1d1d; font-weight: 800; }
+
+/* Summary Boxes */
+.summary-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.summary-box {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.summary-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+.summary-value { font-size: 1.4rem; font-weight: 800; }
+
+.status-pass { background: #dcfce7; color: #166534; }
+.status-fail { background: #fee2e2; color: #991b1b; }
+
+.success-banner {
+    background: #dcfce7;
+    color: #166534;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-weight: 500;
 }
